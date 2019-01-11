@@ -29,8 +29,9 @@ function addRandomTiles(n: number): boolean {
 }
 
 function animate() {
-    if(addRandomTiles(10)) {
-        mosaic.notifyObservers();
+    let result = addRandomTiles(10);
+    mosaic.notifyObservers();
+    if(result) {
         requestAnimationFrame(animate);
     }
 }

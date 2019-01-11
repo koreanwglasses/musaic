@@ -703,9 +703,11 @@ function addRandomTiles(n) {
         return true;
     }
 }
+let i = 1;
 function animate() {
-    if (addRandomTiles(10)) {
-        mosaic.notifyObservers();
+    let result = addRandomTiles(i++);
+    mosaic.notifyObservers();
+    if (result) {
         requestAnimationFrame(animate);
     }
 }
