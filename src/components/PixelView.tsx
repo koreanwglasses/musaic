@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Mosaic } from '../core/Mosaic';
 import { Observer } from '../core/Observable';
 
-export class PixelMosaic extends React.Component<any, any> implements Observer {
+export class PixelView extends React.Component<any, any> implements Observer {
     private mosaic: Mosaic;
     private scale: number;
 

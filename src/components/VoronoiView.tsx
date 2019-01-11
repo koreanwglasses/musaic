@@ -6,7 +6,7 @@ import { Observer } from '../core/Observable';
 import { VoronoiHelper } from '../three/VoronoiHelper';
 import { Vector2 } from 'three';
 
-export class VoronoiMosaic extends React.Component<any, any> implements Observer {
+export class VoronoiView extends React.Component<any, any> implements Observer {
     private mosaic: Mosaic;
     private scale: number;
     
