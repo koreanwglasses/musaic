@@ -171,6 +171,63 @@ exports.VoronoiView = VoronoiView;
 
 /***/ }),
 
+/***/ "./src/controllers/SimpleAnimationController.tsx":
+/*!*******************************************************!*\
+  !*** ./src/controllers/SimpleAnimationController.tsx ***!
+  \*******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(/*! react */ "react");
+const ReactDOM = __webpack_require__(/*! react-dom */ "react-dom");
+const VoronoiView_1 = __webpack_require__(/*! ../components/VoronoiView */ "./src/components/VoronoiView.tsx");
+const SimpleMosaic_1 = __webpack_require__(/*! ../core/SimpleMosaic */ "./src/core/SimpleMosaic.ts");
+const Pixel_1 = __webpack_require__(/*! ../core/Pixel */ "./src/core/Pixel.ts");
+class SimpleAnimationController {
+    constructor(mosaic, view) {
+        this.mosaic = mosaic !== undefined ? mosaic : new SimpleMosaic_1.SimpleMosaic(100, 100);
+        this.view = view !== undefined ? view : React.createElement(VoronoiView_1.VoronoiView, { mosaic: this.mosaic, scale: 5 });
+    }
+    init() {
+        ReactDOM.render(this.view, document.getElementById('root'));
+    }
+    start() {
+        let self_ = this;
+        function addRandomTiles(n) {
+            if (n == 1) {
+                let r = Math.floor(Math.random() * 255);
+                let g = Math.floor(Math.random() * 255);
+                let b = Math.floor(Math.random() * 255);
+                let color = new Pixel_1.Color(r, g, b);
+                return self_.mosaic.addTile(color);
+            }
+            else {
+                for (let i = 0; i < n; i++) {
+                    if (!addRandomTiles(1)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        function animate() {
+            let result = addRandomTiles(10);
+            self_.mosaic.notifyObservers();
+            if (result) {
+                requestAnimationFrame(animate);
+            }
+        }
+        animate();
+    }
+}
+exports.SimpleAnimationController = SimpleAnimationController;
+
+
+/***/ }),
+
 /***/ "./src/core/HashSet.ts":
 /*!*****************************!*\
   !*** ./src/core/HashSet.ts ***!
@@ -678,40 +735,10 @@ exports.SimpleMosaic = SimpleMosaic;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const React = __webpack_require__(/*! react */ "react");
-const ReactDOM = __webpack_require__(/*! react-dom */ "react-dom");
-const VoronoiView_1 = __webpack_require__(/*! ./components/VoronoiView */ "./src/components/VoronoiView.tsx");
-const SimpleMosaic_1 = __webpack_require__(/*! ./core/SimpleMosaic */ "./src/core/SimpleMosaic.ts");
-const Pixel_1 = __webpack_require__(/*! ./core/Pixel */ "./src/core/Pixel.ts");
-let mosaic = new SimpleMosaic_1.SimpleMosaic(100, 100);
-let view = React.createElement(VoronoiView_1.VoronoiView, { mosaic: mosaic, scale: 5 });
-ReactDOM.render(view, document.getElementById('root'));
-function addRandomTiles(n) {
-    if (n == 1) {
-        let r = Math.floor(Math.random() * 255);
-        let g = Math.floor(Math.random() * 255);
-        let b = Math.floor(Math.random() * 255);
-        let color = new Pixel_1.Color(r, g, b);
-        return mosaic.addTile(color);
-    }
-    else {
-        for (let i = 0; i < n; i++) {
-            if (!addRandomTiles(1)) {
-                return false;
-            }
-        }
-        return true;
-    }
-}
-let i = 1;
-function animate() {
-    let result = addRandomTiles(i++);
-    mosaic.notifyObservers();
-    if (result) {
-        requestAnimationFrame(animate);
-    }
-}
-animate();
+const SimpleAnimationController_1 = __webpack_require__(/*! ./controllers/SimpleAnimationController */ "./src/controllers/SimpleAnimationController.tsx");
+let cont = new SimpleAnimationController_1.SimpleAnimationController();
+cont.init();
+cont.start();
 
 
 /***/ }),
