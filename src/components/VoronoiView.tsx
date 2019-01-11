@@ -13,7 +13,7 @@ export class VoronoiView extends React.Component<any, any> implements Observer {
     private renderer: THREE.WebGLRenderer;
     private scene: THREE.Scene;
     private camera: THREE.Camera;
-
+    
     private offsets: Array<Array<THREE.Vector2>>;
     
     constructor(props: any) {
@@ -43,7 +43,7 @@ export class VoronoiView extends React.Component<any, any> implements Observer {
         this.camera = new THREE.OrthographicCamera(0, this.mosaic.getWidth(), 0, -this.mosaic.getHeight(), 0, 1000);
         this.camera.position.y = 10;
         this.camera.lookAt(0, 0, 0);
-
+        
         this.offsets = new Array<Array<THREE.Vector2>>();
         for(let i = 0; i < this.mosaic.getHeight(); i++) {
             this.offsets[i] = new Array<THREE.Vector2>();
@@ -57,27 +57,27 @@ export class VoronoiView extends React.Component<any, any> implements Observer {
         
         let pixels = new Array<Pixel>();
         
-        for(let i = 0; i < this.mosaic.getHeight(); i++) {
-            for(let j = 0; j < this.mosaic.getWidth(); j++) {
-                let color;
-                if(this.mosaic.isOnBoundary(j, i)) {
-                    color = new Color(0, 0, 0, 1);
-                } else {
-                    color = this.mosaic.getColorAt(j, i);
-                }
-
-                if(!color.equals(Color.blank)) {
-                    let pixel = new Pixel(new Point(j, i), color);
-                    pixels.push(pixel);
-                    
-                    if(!this.offsets[i][j]) {
-                        let ox = 0.8 * (Math.random() - 0.5);
-                        let oy = 0.8 * (Math.random() - 0.5);
-                        this.offsets[i][j] = new Vector2(ox, oy);
-                    }
+        for(let point of this.mosaic.allPoints()) { 
+            let x = point.getX();
+            let y = point.getY();
+            let color;
+            if(this.mosaic.isOnBoundary(x, y)) {
+                color = new Color(0, 0, 0, 1);
+            } else {
+                color = this.mosaic.getColorAt(x, y);
+            }
+            
+            if(!color.equals(Color.blank)) {
+                let pixel = new Pixel(point, color);
+                pixels.push(pixel);
+                
+                if(!this.offsets[y][x]) {
+                    let ox = 0.8 * (Math.random() - 0.5);
+                    let oy = 0.8 * (Math.random() - 0.5);
+                    this.offsets[y][x] = new Vector2(ox, oy);
                 }
             }
-        } 
+        }
         
         let mesh = new VoronoiHelper(pixels, this.offsets, 2);
         this.scene.add( mesh );

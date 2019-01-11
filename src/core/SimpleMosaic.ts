@@ -5,15 +5,19 @@ import { Mosaic } from './Mosaic';
 export class SimpleMosaic extends Mosaic {
     private grid: Array<Array<Color>>
     private boundary: HashSet<Point>;
+
+    private allpts: Array<Point>;
     
     public constructor(width: number, height: number) {
         super(width, height);
 
         this.grid = new Array<Array<Color>>();
+        this.allpts = new Array<Point>();
         for(let i = 0; i < height; i++) {
             this.grid[i] = new Array<Color>();
             for(let j = 0; j < width; j++) {
                 this.grid[i][j] = Color.blank;
+                this.allpts.push(new Point(j, i));
             }
         }
         
@@ -94,5 +98,9 @@ export class SimpleMosaic extends Mosaic {
 
     public isOnBoundary(x: number, y: number): boolean {
         return this.boundary.has(new Point(x, y));
+    }
+
+    public allPoints(): Iterable<Point> {
+        return this.allpts;
     }
 }

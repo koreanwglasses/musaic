@@ -1,4 +1,4 @@
-import { Color } from './Pixel';
+import { Color, Point } from './Pixel';
 import { Observable } from './Observable';
 
 export abstract class Mosaic extends Observable {
@@ -25,6 +25,7 @@ export abstract class Mosaic extends Observable {
     abstract addTile(tile: Color): boolean;
     abstract getColorAt(x: number, y: number): Color;
     abstract isOnBoundary(x: number, y: number): boolean;
+    abstract allPoints(): Iterable<Point>;
 
     /**
      * @returns The width in pixels

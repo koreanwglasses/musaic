@@ -135,23 +135,23 @@ class VoronoiView extends React.Component {
             this.scene.remove(this.scene.children[0]);
         }
         let pixels = new Array();
-        for (let i = 0; i < this.mosaic.getHeight(); i++) {
-            for (let j = 0; j < this.mosaic.getWidth(); j++) {
-                let color;
-                if (this.mosaic.isOnBoundary(j, i)) {
-                    color = new Pixel_1.Color(0, 0, 0, 1);
-                }
-                else {
-                    color = this.mosaic.getColorAt(j, i);
-                }
-                if (!color.equals(Pixel_1.Color.blank)) {
-                    let pixel = new Pixel_1.Pixel(new Pixel_1.Point(j, i), color);
-                    pixels.push(pixel);
-                    if (!this.offsets[i][j]) {
-                        let ox = 0.8 * (Math.random() - 0.5);
-                        let oy = 0.8 * (Math.random() - 0.5);
-                        this.offsets[i][j] = new three_1.Vector2(ox, oy);
-                    }
+        for (let point of this.mosaic.allPoints()) {
+            let x = point.getX();
+            let y = point.getY();
+            let color;
+            if (this.mosaic.isOnBoundary(x, y)) {
+                color = new Pixel_1.Color(0, 0, 0, 1);
+            }
+            else {
+                color = this.mosaic.getColorAt(x, y);
+            }
+            if (!color.equals(Pixel_1.Color.blank)) {
+                let pixel = new Pixel_1.Pixel(point, color);
+                pixels.push(pixel);
+                if (!this.offsets[y][x]) {
+                    let ox = 0.8 * (Math.random() - 0.5);
+                    let oy = 0.8 * (Math.random() - 0.5);
+                    this.offsets[y][x] = new three_1.Vector2(ox, oy);
                 }
             }
         }
@@ -642,10 +642,12 @@ class SimpleMosaic extends Mosaic_1.Mosaic {
     constructor(width, height) {
         super(width, height);
         this.grid = new Array();
+        this.allpts = new Array();
         for (let i = 0; i < height; i++) {
             this.grid[i] = new Array();
             for (let j = 0; j < width; j++) {
                 this.grid[i][j] = Pixel_1.Color.blank;
+                this.allpts.push(new Pixel_1.Point(j, i));
             }
         }
         this.boundary = new HashSet_1.HashSet();
@@ -718,6 +720,9 @@ class SimpleMosaic extends Mosaic_1.Mosaic {
     }
     isOnBoundary(x, y) {
         return this.boundary.has(new Pixel_1.Point(x, y));
+    }
+    allPoints() {
+        return this.allpts;
     }
 }
 exports.SimpleMosaic = SimpleMosaic;
