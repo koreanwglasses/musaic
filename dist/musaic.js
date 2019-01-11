@@ -101,29 +101,28 @@ const React = __webpack_require__(/*! react */ "react");
 class PixelMosaic extends React.Component {
     constructor(props) {
         super(props);
-        if (!this.props.mosaic) {
+        this.mosaic = this.props.mosaic;
+        if (!this.mosaic) {
             throw new Error("Mosaic not defined in props!");
         }
-        else {
-            this.props.mosaic.addObserver(this);
-        }
+        this.scale = this.props.scale || 1;
+        this.mosaic.addObserver(this);
     }
     componentDidMount() {
         this.updateCanvas();
     }
     updateCanvas() {
-        const mosaic = this.props.mosaic;
         const ctx = this.refs.canvas.getContext('2d');
-        ctx.clearRect(0, 0, mosaic.getWidth(), mosaic.getHeight());
-        for (let i = 0; i < mosaic.getHeight(); i++) {
-            for (let j = 0; j < mosaic.getWidth(); j++) {
-                ctx.fillStyle = mosaic.getColorAt(j, i).getRgba();
-                ctx.fillRect(i, j, 1, 1);
+        ctx.clearRect(0, 0, this.mosaic.getWidth(), this.mosaic.getHeight());
+        for (let i = 0; i < this.mosaic.getHeight(); i++) {
+            for (let j = 0; j < this.mosaic.getWidth(); j++) {
+                ctx.fillStyle = this.mosaic.getColorAt(j, i).getRgba();
+                ctx.fillRect(i * this.scale, j * this.scale, this.scale, this.scale);
             }
         }
     }
     render() {
-        return (React.createElement("canvas", { ref: "canvas", width: this.props.mosaic.getWidth(), height: this.props.mosaic.getHeight() }));
+        return (React.createElement("canvas", { ref: "canvas", width: this.mosaic.getWidth() * this.scale, height: this.mosaic.getHeight() * this.scale }));
     }
     update() {
         this.updateCanvas();
@@ -329,6 +328,28 @@ exports.HashSet = HashSet;
 Object.defineProperty(exports, "__esModule", { value: true });
 const Observable_1 = __webpack_require__(/*! ./Observable */ "./src/core/Observable.ts");
 class Mosaic extends Observable_1.Observable {
+    /**
+     * Construct an empty mosaic with given height and width in pixels
+     * @param width width in pixels
+     * @param height height in pixels
+     */
+    constructor(width, height) {
+        super();
+        this.width = width;
+        this.height = height;
+    }
+    /**
+     * @returns The width in pixels
+     */
+    getWidth() {
+        return this.width;
+    }
+    /**
+     * @returns The width in pixels
+     */
+    getHeight() {
+        return this.height;
+    }
 }
 exports.Mosaic = Mosaic;
 
@@ -510,9 +531,7 @@ const HashSet_1 = __webpack_require__(/*! ./HashSet */ "./src/core/HashSet.ts");
 const Mosaic_1 = __webpack_require__(/*! ./Mosaic */ "./src/core/Mosaic.ts");
 class SimpleMosaic extends Mosaic_1.Mosaic {
     constructor(width, height) {
-        super();
-        this.width = width;
-        this.height = height;
+        super(width, height);
         this.grid = new Array();
         for (let i = 0; i < height; i++) {
             this.grid[i] = new Array();
@@ -536,7 +555,7 @@ class SimpleMosaic extends Mosaic_1.Mosaic {
             neighbors.push(new Pixel_1.Point(x + 1, y));
             neighbors.push(new Pixel_1.Point(x + 1, y + 1));
             return neighbors.filter((value) => {
-                return 0 <= value.getX() && value.getX() < self_.width && 0 <= value.getY() && value.getY() < self_.height;
+                return 0 <= value.getX() && value.getX() < self_.getWidth() && 0 <= value.getY() && value.getY() < self_.getHeight();
             });
         }
         function colorDistance(color1, color2) {
@@ -574,18 +593,15 @@ class SimpleMosaic extends Mosaic_1.Mosaic {
             self_.boundary.addAll(newBoundary);
         }
         let bestPoint = findBestPoint();
+        if (!bestPoint)
+            return false;
         updateBoundary(bestPoint);
         this.grid[bestPoint.getY()][bestPoint.getX()] = color;
         this.setChanged();
+        return true;
     }
     getColorAt(x, y) {
         return this.grid[y][x];
-    }
-    getWidth() {
-        return this.width;
-    }
-    getHeight() {
-        return this.width;
     }
 }
 exports.SimpleMosaic = SimpleMosaic;
@@ -608,8 +624,8 @@ const ReactDOM = __webpack_require__(/*! react-dom */ "react-dom");
 const PixelMosaic_1 = __webpack_require__(/*! ./components/PixelMosaic */ "./src/components/PixelMosaic.tsx");
 const SimpleMosaic_1 = __webpack_require__(/*! ./core/SimpleMosaic */ "./src/core/SimpleMosaic.ts");
 const Pixel_1 = __webpack_require__(/*! ./core/Pixel */ "./src/core/Pixel.ts");
-let mosaic = new SimpleMosaic_1.SimpleMosaic(500, 500);
-let view = React.createElement(PixelMosaic_1.PixelMosaic, { mosaic: mosaic });
+let mosaic = new SimpleMosaic_1.SimpleMosaic(50, 50);
+let view = React.createElement(PixelMosaic_1.PixelMosaic, { mosaic: mosaic, scale: 5 });
 ReactDOM.render(view, document.getElementById('root'));
 function animate() {
     let r = Math.floor(Math.random() * 255);
@@ -617,9 +633,10 @@ function animate() {
     let b = Math.floor(Math.random() * 255);
     let a = Math.random();
     let color = new Pixel_1.Color(r, g, b, a);
-    mosaic.addTile(color);
-    mosaic.notifyObservers();
-    requestAnimationFrame(animate);
+    if (mosaic.addTile(color)) {
+        mosaic.notifyObservers();
+        requestAnimationFrame(animate);
+    }
 }
 animate();
 

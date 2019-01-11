@@ -3,16 +3,12 @@ import { HashSet } from './HashSet';
 import { Mosaic } from './Mosaic';
 
 export class SimpleMosaic extends Mosaic {
-    private width: number;
-    private height: number;
     private grid: Array<Array<Color>>
     private boundary: HashSet<Point>;
     
     public constructor(width: number, height: number) {
-        super();
+        super(width, height);
 
-        this.width = width;
-        this.height = height;
         this.grid = new Array<Array<Color>>();
         for(let i = 0; i < height; i++) {
             this.grid[i] = new Array<Color>();
@@ -25,7 +21,7 @@ export class SimpleMosaic extends Mosaic {
         this.boundary.add(new Point(Math.floor(width/2), Math.floor(height/2)));
     }
     
-    public addTile(color: Color): void {
+    public addTile(color: Color): boolean {
         let self_ = this;
         function neighborsOf(x: number, y: number): Array<Point> {
             let neighbors = new Array<Point>();
@@ -39,7 +35,7 @@ export class SimpleMosaic extends Mosaic {
             neighbors.push(new Point(x+1, y+1));
             
             return neighbors.filter((value) => {
-                return 0 <= value.getX() && value.getX() < self_.width && 0 <= value.getY() && value.getY() < self_.height; 
+                return 0 <= value.getX() && value.getX() < self_.getWidth() && 0 <= value.getY() && value.getY() < self_.getHeight(); 
             });
         }
         
@@ -80,21 +76,14 @@ export class SimpleMosaic extends Mosaic {
         }
         
         let bestPoint = findBestPoint();
+        if(!bestPoint) return false;
         updateBoundary(bestPoint);
         this.grid[bestPoint.getY()][bestPoint.getX()] = color;
-
         this.setChanged();
+        return true;
     }
     
     public getColorAt(x: number, y: number): Color {
         return this.grid[y][x];
-    }
-
-    public getWidth(): number {
-        return this.width;
-    }
-
-    public getHeight(): number {
-        return this.width;
     }
 }
