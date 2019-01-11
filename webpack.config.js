@@ -2,7 +2,7 @@ module.exports = [{
     /////////////////////
     //// Development ////
     /////////////////////
-    entry: "./src/index.ts",
+    entry: "./src/index.tsx",
     output: {
         filename: "musaic.js",
         path: __dirname + "/dist",
@@ -43,7 +43,7 @@ module.exports = [{
     ////////////////////
     //// Production ////
     ////////////////////
-    entry: "./src/index.ts",
+    entry: "./src/index.tsx",
     output: {
         filename: "musaic.min.js",
         path: __dirname + "/dist",
