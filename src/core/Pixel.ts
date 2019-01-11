@@ -1,4 +1,4 @@
-import { Hashable } from './HashSet';
+import { Hashable } from './HashMap';
 
 /**
  * Represents an RGBA color

@@ -24,6 +24,7 @@ export abstract class Mosaic extends Observable {
      */
     abstract addTile(tile: Color): boolean;
     abstract getColorAt(x: number, y: number): Color;
+    abstract isSet(x: number, y: number): boolean;
     abstract isOnBoundary(x: number, y: number): boolean;
     abstract allPoints(): Iterable<Point>;
 

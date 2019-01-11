@@ -4,7 +4,8 @@ import { Color, Point, Pixel } from '../core/Pixel';
 import { Mosaic } from '../core/Mosaic';
 import { Observer } from '../core/Observable';
 import { VoronoiHelper } from '../three/VoronoiHelper';
-import { Vector2 } from 'three';
+import { Vector2, Vector } from 'three';
+import { HashMap } from '../core/HashMap';
 
 export class VoronoiView extends React.Component<any, any> implements Observer {
     private mosaic: Mosaic;
@@ -14,7 +15,7 @@ export class VoronoiView extends React.Component<any, any> implements Observer {
     private scene: THREE.Scene;
     private camera: THREE.Camera;
     
-    private offsets: Array<Array<THREE.Vector2>>;
+    private offsets: HashMap<Point, Vector2>;
     
     constructor(props: any) {
         super(props);
@@ -44,10 +45,7 @@ export class VoronoiView extends React.Component<any, any> implements Observer {
         this.camera.position.y = 10;
         this.camera.lookAt(0, 0, 0);
         
-        this.offsets = new Array<Array<THREE.Vector2>>();
-        for(let i = 0; i < this.mosaic.getHeight(); i++) {
-            this.offsets[i] = new Array<THREE.Vector2>();
-        }
+        this.offsets = new HashMap<Point, Vector2>(); 
     }
     
     updateCanvas() {
@@ -67,14 +65,14 @@ export class VoronoiView extends React.Component<any, any> implements Observer {
                 color = this.mosaic.getColorAt(x, y);
             }
             
-            if(!color.equals(Color.blank)) {
+            if(this.mosaic.isOnBoundary(x, y) || this.mosaic.isSet(x, y)) {
                 let pixel = new Pixel(point, color);
                 pixels.push(pixel);
                 
-                if(!this.offsets[y][x]) {
+                if(!this.offsets.has(point)) {
                     let ox = 0.8 * (Math.random() - 0.5);
                     let oy = 0.8 * (Math.random() - 0.5);
-                    this.offsets[y][x] = new Vector2(ox, oy);
+                    this.offsets.set(point, new Vector2(ox, oy));
                 }
             }
         }

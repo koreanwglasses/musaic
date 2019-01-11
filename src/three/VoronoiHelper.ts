@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import { Pixel } from '../core/Pixel';
+import { HashMap } from '../core/HashMap';
+import { Point, Pixel } from '../core/Pixel';
 
 export class VoronoiHelper extends THREE.Object3D {
-    public constructor(pixels: Array<Pixel>, offsets: Array<Array<THREE.Vector2>>, radius?: number, segments?: number) {
+    public constructor(pixels: Array<Pixel>, offsets: HashMap<Point, THREE.Vector2>, radius?: number, segments?: number) {
         super();
         var instances = pixels.length;
         var radius_ = radius || 1;
@@ -14,9 +15,10 @@ export class VoronoiHelper extends THREE.Object3D {
         // instanced attributes
         for ( var i = 0; i < instances; i ++ ) {
             // offsets
-            let x = pixels[i].getPosition().getX();
-            let y = pixels[i].getPosition().getY();
-            offsets_.push( x + offsets[y][x].x, 0, y + offsets[y][x].y );
+            let position = pixels[i].getPosition();
+            let x = position.getX();
+            let y = position.getY();
+            offsets_.push( x + offsets.get(position).x, 0, y + offsets.get(position).y );
             // colors
             colors.push( pixels[i].getColor().getR() / 255.0,
             pixels[i].getColor().getG() / 255.0,

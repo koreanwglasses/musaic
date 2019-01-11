@@ -3,17 +3,16 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { PixelView } from '../components/PixelView';
 import { VoronoiView } from '../components/VoronoiView';
-import { SimpleMosaic } from '../core/SimpleMosaic';
+import { SimpleSquareMosaic } from '../core/SimpleSquareMosaic';
 import { Color } from '../core/Pixel';
 import { Mosaic } from '../core/Mosaic';
-import { Observer } from '../core/Observable';
 
 export class SimpleAnimationController {
     private mosaic: Mosaic;
     private view: JSX.Element;
     
     public constructor(mosaic?: Mosaic, view?: JSX.Element) {
-        this.mosaic = mosaic !== undefined ? mosaic : new SimpleMosaic(100, 100);
+        this.mosaic = mosaic !== undefined ? mosaic : new SimpleSquareMosaic(100, 100);
         this.view = view !== undefined ? view : <VoronoiView mosaic={this.mosaic} scale={5} />;
     }
     

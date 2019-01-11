@@ -1,66 +1,42 @@
+import { Grid } from './Grid';
 import { Color, Point } from './Pixel';
 import { HashSet } from './HashSet';
 import { Mosaic } from './Mosaic';
 
-export class SimpleMosaic extends Mosaic {
-    private grid: Array<Array<Color>>
+export abstract class SimpleMosaic extends Mosaic {
+    private grid: Grid;
     private boundary: HashSet<Point>;
 
-    private allpts: Array<Point>;
-    
-    public constructor(width: number, height: number) {
-        super(width, height);
+    public constructor(grid: Grid, seed: Iterable<Point>) {
+        super(grid.getWidth(), grid.getHeight());
 
-        this.grid = new Array<Array<Color>>();
-        this.allpts = new Array<Point>();
-        for(let i = 0; i < height; i++) {
-            this.grid[i] = new Array<Color>();
-            for(let j = 0; j < width; j++) {
-                this.grid[i][j] = Color.blank;
-                this.allpts.push(new Point(j, i));
-            }
-        }
+        this.grid = grid;
         
         this.boundary = new HashSet<Point>();
-
-        this.boundary.add(new Point(Math.floor(width/2), Math.floor(height/2)));
-        // this.boundary.add(new Point(0, 0));
-        // this.boundary.add(new Point(0, height - 1));
-        // this.boundary.add(new Point(width - 1, 0));
-        // this.boundary.add(new Point(width - 1, height - 1));
+        this.boundary.addAll(seed);
     }
     
     public addTile(color: Color): boolean {
         let self_ = this;
-        function neighborsOf(x: number, y: number): Array<Point> {
-            let neighbors = new Array<Point>();
-            neighbors.push(new Point(x-1, y-1));
-            neighbors.push(new Point(x-1, y));
-            neighbors.push(new Point(x-1, y+1));
-            neighbors.push(new Point(x, y-1));
-            neighbors.push(new Point(x, y+1));
-            neighbors.push(new Point(x+1, y-1));
-            neighbors.push(new Point(x+1, y));
-            neighbors.push(new Point(x+1, y+1));
-            
-            return neighbors.filter((value) => {
-                return 0 <= value.getX() && value.getX() < self_.getWidth() && 0 <= value.getY() && value.getY() < self_.getHeight(); 
-            });
-        }
         
         function colorDistance(color1: Color, color2: Color): number {
             return Math.pow(color1.getR() - color2.getR(), 2) + Math.pow(color1.getG() - color2.getG(), 2)
-            + Math.pow(color1.getB() - color2.getB(), 2)
+            + Math.pow(color1.getB() - color2.getB(), 2);
         }
         
         function similarity(x: number, y: number): number {
-            let distances = neighborsOf(x, y).filter((value) => {
-                return !self_.getColorAt(value.getX(), value.getY()).equals(Color.blank);
-            }).map((value) => {
-                return colorDistance(color, self_.getColorAt(value.getX(), value.getY()));
-            });
-            if(distances.length == 0) return 0;
-            else return Math.min(...distances);
+            let neighbors = self_.grid.getNeighborsOf(x, y)
+
+            let minDistance = Number.POSITIVE_INFINITY;
+            for(let neighbor of neighbors) {
+                if(self_.grid.isSet(neighbor.getX(), neighbor.getY())) {
+                    let distance = colorDistance(color, self_.grid.getColorAt(neighbor.getX(), neighbor.getY()));
+                    minDistance = Math.min(minDistance, distance);
+                }
+            }
+
+            if(!Number.isFinite(minDistance)) return 0;
+            else return minDistance;
         }
         
         function findBestPoint(): Point {
@@ -78,22 +54,28 @@ export class SimpleMosaic extends Mosaic {
 
         function updateBoundary(point: Point) {
             self_.boundary.delete(point);
-            let newBoundary = neighborsOf(point.getX(), point.getY()).filter((value) => {
-                return self_.getColorAt(value.getX(), value.getY()).equals(Color.blank);
-            });
-            self_.boundary.addAll(newBoundary);
+            let neighbors = self_.grid.getNeighborsOf(point.getX(), point.getY());
+            for(let neighbor of neighbors) {
+                if(!self_.grid.isSet(neighbor.getX(), neighbor.getY())) {
+                    self_.boundary.add(neighbor);
+                }
+            }
         }
         
         let bestPoint = findBestPoint();
         if(!bestPoint) return false;
         updateBoundary(bestPoint);
-        this.grid[bestPoint.getY()][bestPoint.getX()] = color;
+        this.grid.setColorAt(bestPoint.getX(), bestPoint.getY(), color);
         this.setChanged();
         return true;
     }
     
     public getColorAt(x: number, y: number): Color {
-        return this.grid[y][x];
+        return this.grid.getColorAt(x, y);
+    }
+
+    public isSet(x: number, y: number): boolean {
+        return this.grid.isSet(x, y);
     }
 
     public isOnBoundary(x: number, y: number): boolean {
@@ -101,6 +83,6 @@ export class SimpleMosaic extends Mosaic {
     }
 
     public allPoints(): Iterable<Point> {
-        return this.allpts;
+        return this.grid.getAllPoints();
     }
 }

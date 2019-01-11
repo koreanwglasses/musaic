@@ -1,24 +1,7 @@
-import { string } from "prop-types";
-
-export interface Hashable {
-    /**
-    * Indicates whether some other object is "equal to" this one.
-    * @param {any} obj the reference object with which to compare.
-    * @returns {boolean} true if this object is the same as the obj argument; false
-    * otherwise.
-    */
-    equals(obj: any): boolean;
-    
-    /**
-    * Returns a hash code value for the object. This method is supported for the
-    * benefit of hash tables such as those provided by HashSet.
-    * @returns {string} a hash code value for this object.
-    */
-    hashString(): string;
-}
+import { Hashable, HashMap } from './HashMap';
 
 export class HashSet<T extends Hashable> implements Iterable<T> {
-    private map: Map<String, Array<T>>;
+    private map: HashMap<T, T>;
     
     /**
     * The Set object lets you store unique values of any hashable type.
@@ -28,7 +11,7 @@ export class HashSet<T extends Hashable> implements Iterable<T> {
     * @returns {HashSet<T>} A new Set object
     */
     public constructor(iterable?: Iterable<T>) {
-        this.map = new Map<String, Array<T>>();
+        this.map = new HashMap<T, T>();
         if(iterable) {
             for(let value of iterable) {
                 this.add(value);
@@ -42,15 +25,7 @@ export class HashSet<T extends Hashable> implements Iterable<T> {
     * @returns {HashSet} The Set object.
     */
     public add(value: T): HashSet<T> {
-        if(!this.has(value)) {
-            let hashString = value.hashString();
-            let bucket = this.map.get(hashString);
-            if(!bucket) {
-                this.map.set(hashString, [value]);
-            } else {
-                bucket.push(value);
-            }
-        }
+        this.map.set(value, value); 
         return this;
     }
 
@@ -70,7 +45,7 @@ export class HashSet<T extends Hashable> implements Iterable<T> {
     * Removes all elements from this Set.
     */
     public clear(): void {
-        throw new Error("Method not implemented.");
+        this.map.clear();
     }
     
     /**
@@ -81,23 +56,7 @@ export class HashSet<T extends Hashable> implements Iterable<T> {
     * otherwise false.
     */
     public delete(value: T): boolean {
-        if(this.has(value)) {
-            let hashString = value.hashString();
-            let bucket = this.map.get(hashString);
-
-            if(bucket.length == 1) {
-                this.map.delete(hashString);
-            }
-
-            let index = bucket.findIndex((item) => {
-                return value.equals(item);
-            });
-            bucket.splice(index, 1);
-
-            return true;
-        } else {
-            return false;
-        }
+        return this.map.delete(value);
     }
     
     /**
@@ -106,11 +65,11 @@ export class HashSet<T extends Hashable> implements Iterable<T> {
     * key like in Map objects. However, to keep the API similar to the Map object,
     * each entry has the same value for its key and value here, so that an array 
     * [value, value] is returned.
-    * @returns {Iterator<Array<T>>} A new Iterator object that contains an array of [value, value] for
+    * @returns {Iterator<[T, T]>} A new Iterator object that contains an array of [value, value] for
     * each element in this Set, in insertion order.
     */
-    public entries(): Iterator<Array<T>> {
-        throw new Error("Method not implemented.");
+    public entries(): Iterator<[T, T]> {
+        return this.map.entries();
     }
     
     /**
@@ -140,18 +99,7 @@ export class HashSet<T extends Hashable> implements Iterable<T> {
     * @returns {boolean} Returns true if an element with the specified value exists in the Set object; otherwise false.
     */
     public has(value: T): boolean {
-        let bucket = this.map.get(value.hashString());
-        if(!bucket) { 
-            return false;
-        } else if(bucket.length == 1) {
-            return true;
-        }
-        else {
-            for(let item of bucket) {
-                if(value.equals(item)) return true;
-            }
-            return false;
-        }
+        return this.map.has(value); 
     }
     
     /**
@@ -164,7 +112,7 @@ export class HashSet<T extends Hashable> implements Iterable<T> {
     * element in this Set, in no particular order.
     */
     public keys(): Iterator<T> {
-        return this.values();
+        return this.map.keys();
     }
     
     /**
@@ -177,13 +125,7 @@ export class HashSet<T extends Hashable> implements Iterable<T> {
     * element in this Set, in no particular order. 
     */
     public values(): Iterator<T> {
-        let allValues = new Array<T>();
-        for(let entry of this.map) {
-            for(let value of entry[1]) {
-                allValues.push(value);
-            }
-        }
-        return allValues.values();
+        return this.map.values();
     }
     
     /**

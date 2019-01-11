@@ -102,6 +102,7 @@ const THREE = __webpack_require__(/*! three */ "three");
 const Pixel_1 = __webpack_require__(/*! ../core/Pixel */ "./src/core/Pixel.ts");
 const VoronoiHelper_1 = __webpack_require__(/*! ../three/VoronoiHelper */ "./src/three/VoronoiHelper.ts");
 const three_1 = __webpack_require__(/*! three */ "three");
+const HashMap_1 = __webpack_require__(/*! ../core/HashMap */ "./src/core/HashMap.ts");
 class VoronoiView extends React.Component {
     constructor(props) {
         super(props);
@@ -125,10 +126,7 @@ class VoronoiView extends React.Component {
         this.camera = new THREE.OrthographicCamera(0, this.mosaic.getWidth(), 0, -this.mosaic.getHeight(), 0, 1000);
         this.camera.position.y = 10;
         this.camera.lookAt(0, 0, 0);
-        this.offsets = new Array();
-        for (let i = 0; i < this.mosaic.getHeight(); i++) {
-            this.offsets[i] = new Array();
-        }
+        this.offsets = new HashMap_1.HashMap();
     }
     updateCanvas() {
         while (this.scene.children.length > 0) {
@@ -145,13 +143,13 @@ class VoronoiView extends React.Component {
             else {
                 color = this.mosaic.getColorAt(x, y);
             }
-            if (!color.equals(Pixel_1.Color.blank)) {
+            if (this.mosaic.isOnBoundary(x, y) || this.mosaic.isSet(x, y)) {
                 let pixel = new Pixel_1.Pixel(point, color);
                 pixels.push(pixel);
-                if (!this.offsets[y][x]) {
+                if (!this.offsets.has(point)) {
                     let ox = 0.8 * (Math.random() - 0.5);
                     let oy = 0.8 * (Math.random() - 0.5);
-                    this.offsets[y][x] = new three_1.Vector2(ox, oy);
+                    this.offsets.set(point, new three_1.Vector2(ox, oy));
                 }
             }
         }
@@ -184,11 +182,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(/*! react */ "react");
 const ReactDOM = __webpack_require__(/*! react-dom */ "react-dom");
 const VoronoiView_1 = __webpack_require__(/*! ../components/VoronoiView */ "./src/components/VoronoiView.tsx");
-const SimpleMosaic_1 = __webpack_require__(/*! ../core/SimpleMosaic */ "./src/core/SimpleMosaic.ts");
+const SimpleSquareMosaic_1 = __webpack_require__(/*! ../core/SimpleSquareMosaic */ "./src/core/SimpleSquareMosaic.ts");
 const Pixel_1 = __webpack_require__(/*! ../core/Pixel */ "./src/core/Pixel.ts");
 class SimpleAnimationController {
     constructor(mosaic, view) {
-        this.mosaic = mosaic !== undefined ? mosaic : new SimpleMosaic_1.SimpleMosaic(100, 100);
+        this.mosaic = mosaic !== undefined ? mosaic : new SimpleSquareMosaic_1.SimpleSquareMosaic(100, 100);
         this.view = view !== undefined ? view : React.createElement(VoronoiView_1.VoronoiView, { mosaic: this.mosaic, scale: 5 });
     }
     init() {
@@ -228,6 +226,158 @@ exports.SimpleAnimationController = SimpleAnimationController;
 
 /***/ }),
 
+/***/ "./src/core/HashMap.ts":
+/*!*****************************!*\
+  !*** ./src/core/HashMap.ts ***!
+  \*****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class HashMap {
+    /**
+    * The Map object holds key-value pairs and remembers the original insertion order of the keys. Any value (both objects and primitive values) may be used as either a key or a value.
+    * @param {Iterable<[K, V]>} iterable An Array or other iterable object whose elements are key-value pairs (arrays with two elements, e.g. [[ 1, 'one' ],[ 2, 'two' ]]). Each key-value pair is added to the new Map; null values are treated as undefined.
+    */
+    constructor(iterable) {
+        this.map = new Map();
+        if (iterable) {
+            for (let entry of iterable) {
+                this.set(entry[0], entry[1]);
+            }
+        }
+    }
+    /**
+    * The clear() method removes all elements from a Map object.
+    */
+    clear() {
+        this.map = new Map();
+    }
+    /**
+    * The delete() method removes the specified element from a Map object.
+    * @param {K} key The key of the element to remove from the Map object.
+    * @returns {boolean} true if an element in the Map object existed and has been removed, or false if the element does not exist.
+    */
+    delete(key) {
+        if (this.has(key)) {
+            let hashString = key.hashString();
+            let bucket = this.map.get(hashString);
+            if (bucket.length == 1) {
+                this.map.delete(hashString);
+            }
+            let index = bucket.findIndex((item) => {
+                return key.equals(item);
+            });
+            bucket.splice(index, 1);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    /**
+    * The entries() method returns a new Iterator object that contains the [key, value] pairs for each element in the Map object in insertion order.
+    * @returns {Iterator<[K, V]>} A new Map iterator object.
+    */
+    entries() {
+        let allValues = new Array();
+        for (let entry of this.map) {
+            for (let kv of entry[1]) {
+                allValues.push(kv);
+            }
+        }
+        return allValues.values();
+    }
+    /**
+    * The forEach() method executes a provided function once per each key/value pair in the Map object, in no particular order.
+    * @param {(value: V, key: K, map: HashMap<K, V>) => void} callback Function to execute for each element.
+    * @param {any?} thisArg Value to use as this when executing callback.
+    */
+    forEach(callback, thisArg) {
+        throw new Error("Method not implemented.");
+    }
+    /**
+    * The get() method returns a specified element from a Map object.
+    * @param {K} key Required. The key of the element to return from the Map object.
+    * @returns {V} Returns the element associated with the specified key or undefined if the key can't be found in the Map object.
+    */
+    get(key) {
+        let bucket = this.map.get(key.hashString());
+        if (!bucket) {
+            return undefined;
+        }
+        else {
+            for (let item of bucket) {
+                if (key.equals(item[0]))
+                    return item[1];
+            }
+            return undefined;
+        }
+    }
+    /**
+    * The has() method returns a boolean indicating whether an element with the specified key exists or not.
+    * @param {K} key Required. The key of the element to test for presence in the Map object.
+    * @returns {boolean} Returns true if an element with the specified key exists in the Map object; otherwise false.
+    */
+    has(key) {
+        return this.get(key) !== undefined;
+    }
+    /**
+    * The keys() method returns a new Iterator object that contains the keys for each element in the Map object in no particular order.
+    * @returns {K} A new Map iterator object.
+    */
+    keys() {
+        let keysArray = new Array();
+        for (let entry of this) {
+            keysArray.push(entry[0]);
+        }
+        return keysArray.values();
+    }
+    /**
+    * The set() method adds or updates an element with a specified key and value to a Map object.
+    * @param {K} key The key of the element to add to the Map object.
+    * @param {V} value The value of the element to add to the Map object.
+    * @returns The Map object.
+    */
+    set(key, value) {
+        if (!this.has(key)) {
+            let hashString = key.hashString();
+            let bucket = this.map.get(hashString);
+            if (!bucket) {
+                this.map.set(hashString, [[key, value]]);
+            }
+            else {
+                bucket.push([key, value]);
+            }
+        }
+        return this;
+    }
+    /**
+    * The values() method returns a new Iterator object that contains the values for each element in the Map object in no particular order.
+    * @returns {Iterator<V>} A new Map iterator object
+    */
+    values() {
+        let valuesArray = new Array();
+        for (let entry of this) {
+            valuesArray.push(entry[1]);
+        }
+        return valuesArray.values();
+    }
+    /**
+    * The initial value of the @@iterator property is the same function object as the initial value of the entries method.
+    * @returns The map iterator function, which is the entries() function by default.
+    */
+    [Symbol.iterator]() {
+        return this.entries();
+    }
+}
+exports.HashMap = HashMap;
+
+
+/***/ }),
+
 /***/ "./src/core/HashSet.ts":
 /*!*****************************!*\
   !*** ./src/core/HashSet.ts ***!
@@ -238,6 +388,7 @@ exports.SimpleAnimationController = SimpleAnimationController;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const HashMap_1 = __webpack_require__(/*! ./HashMap */ "./src/core/HashMap.ts");
 class HashSet {
     /**
     * The Set object lets you store unique values of any hashable type.
@@ -247,7 +398,7 @@ class HashSet {
     * @returns {HashSet<T>} A new Set object
     */
     constructor(iterable) {
-        this.map = new Map();
+        this.map = new HashMap_1.HashMap();
         if (iterable) {
             for (let value of iterable) {
                 this.add(value);
@@ -260,16 +411,7 @@ class HashSet {
     * @returns {HashSet} The Set object.
     */
     add(value) {
-        if (!this.has(value)) {
-            let hashString = value.hashString();
-            let bucket = this.map.get(hashString);
-            if (!bucket) {
-                this.map.set(hashString, [value]);
-            }
-            else {
-                bucket.push(value);
-            }
-        }
+        this.map.set(value, value);
         return this;
     }
     /**
@@ -287,7 +429,7 @@ class HashSet {
     * Removes all elements from this Set.
     */
     clear() {
-        throw new Error("Method not implemented.");
+        this.map.clear();
     }
     /**
     * Removes the specified element from this Set.
@@ -297,21 +439,7 @@ class HashSet {
     * otherwise false.
     */
     delete(value) {
-        if (this.has(value)) {
-            let hashString = value.hashString();
-            let bucket = this.map.get(hashString);
-            if (bucket.length == 1) {
-                this.map.delete(hashString);
-            }
-            let index = bucket.findIndex((item) => {
-                return value.equals(item);
-            });
-            bucket.splice(index, 1);
-            return true;
-        }
-        else {
-            return false;
-        }
+        return this.map.delete(value);
     }
     /**
     * Returns a new Iterator object that contains an array of [value, value] for
@@ -319,11 +447,11 @@ class HashSet {
     * key like in Map objects. However, to keep the API similar to the Map object,
     * each entry has the same value for its key and value here, so that an array
     * [value, value] is returned.
-    * @returns {Iterator<Array<T>>} A new Iterator object that contains an array of [value, value] for
+    * @returns {Iterator<[T, T]>} A new Iterator object that contains an array of [value, value] for
     * each element in this Set, in insertion order.
     */
     entries() {
-        throw new Error("Method not implemented.");
+        return this.map.entries();
     }
     /**
     * Executes a provided function once for each value in this Set, in insertion
@@ -351,20 +479,7 @@ class HashSet {
     * @returns {boolean} Returns true if an element with the specified value exists in the Set object; otherwise false.
     */
     has(value) {
-        let bucket = this.map.get(value.hashString());
-        if (!bucket) {
-            return false;
-        }
-        else if (bucket.length == 1) {
-            return true;
-        }
-        else {
-            for (let item of bucket) {
-                if (value.equals(item))
-                    return true;
-            }
-            return false;
-        }
+        return this.map.has(value);
     }
     /**
     * The values() method returns a new Iterator object that contains the values
@@ -376,7 +491,7 @@ class HashSet {
     * element in this Set, in no particular order.
     */
     keys() {
-        return this.values();
+        return this.map.keys();
     }
     /**
     * The keys() method returns a new Iterator object that contains the values
@@ -388,13 +503,7 @@ class HashSet {
     * element in this Set, in no particular order.
     */
     values() {
-        let allValues = new Array();
-        for (let entry of this.map) {
-            for (let value of entry[1]) {
-                allValues.push(value);
-            }
-        }
-        return allValues.values();
+        return this.map.values();
     }
     /**
     * The initial value of the @@iterator property is the same function object
@@ -639,54 +748,31 @@ const Pixel_1 = __webpack_require__(/*! ./Pixel */ "./src/core/Pixel.ts");
 const HashSet_1 = __webpack_require__(/*! ./HashSet */ "./src/core/HashSet.ts");
 const Mosaic_1 = __webpack_require__(/*! ./Mosaic */ "./src/core/Mosaic.ts");
 class SimpleMosaic extends Mosaic_1.Mosaic {
-    constructor(width, height) {
-        super(width, height);
-        this.grid = new Array();
-        this.allpts = new Array();
-        for (let i = 0; i < height; i++) {
-            this.grid[i] = new Array();
-            for (let j = 0; j < width; j++) {
-                this.grid[i][j] = Pixel_1.Color.blank;
-                this.allpts.push(new Pixel_1.Point(j, i));
-            }
-        }
+    constructor(grid, seed) {
+        super(grid.getWidth(), grid.getHeight());
+        this.grid = grid;
         this.boundary = new HashSet_1.HashSet();
-        this.boundary.add(new Pixel_1.Point(Math.floor(width / 2), Math.floor(height / 2)));
-        // this.boundary.add(new Point(0, 0));
-        // this.boundary.add(new Point(0, height - 1));
-        // this.boundary.add(new Point(width - 1, 0));
-        // this.boundary.add(new Point(width - 1, height - 1));
+        this.boundary.addAll(seed);
     }
     addTile(color) {
         let self_ = this;
-        function neighborsOf(x, y) {
-            let neighbors = new Array();
-            neighbors.push(new Pixel_1.Point(x - 1, y - 1));
-            neighbors.push(new Pixel_1.Point(x - 1, y));
-            neighbors.push(new Pixel_1.Point(x - 1, y + 1));
-            neighbors.push(new Pixel_1.Point(x, y - 1));
-            neighbors.push(new Pixel_1.Point(x, y + 1));
-            neighbors.push(new Pixel_1.Point(x + 1, y - 1));
-            neighbors.push(new Pixel_1.Point(x + 1, y));
-            neighbors.push(new Pixel_1.Point(x + 1, y + 1));
-            return neighbors.filter((value) => {
-                return 0 <= value.getX() && value.getX() < self_.getWidth() && 0 <= value.getY() && value.getY() < self_.getHeight();
-            });
-        }
         function colorDistance(color1, color2) {
             return Math.pow(color1.getR() - color2.getR(), 2) + Math.pow(color1.getG() - color2.getG(), 2)
                 + Math.pow(color1.getB() - color2.getB(), 2);
         }
         function similarity(x, y) {
-            let distances = neighborsOf(x, y).filter((value) => {
-                return !self_.getColorAt(value.getX(), value.getY()).equals(Pixel_1.Color.blank);
-            }).map((value) => {
-                return colorDistance(color, self_.getColorAt(value.getX(), value.getY()));
-            });
-            if (distances.length == 0)
+            let neighbors = self_.grid.getNeighborsOf(x, y);
+            let minDistance = Number.POSITIVE_INFINITY;
+            for (let neighbor of neighbors) {
+                if (self_.grid.isSet(neighbor.getX(), neighbor.getY())) {
+                    let distance = colorDistance(color, self_.grid.getColorAt(neighbor.getX(), neighbor.getY()));
+                    minDistance = Math.min(minDistance, distance);
+                }
+            }
+            if (!Number.isFinite(minDistance))
                 return 0;
             else
-                return Math.min(...distances);
+                return minDistance;
         }
         function findBestPoint() {
             let minSimilarity = Number.POSITIVE_INFINITY;
@@ -702,30 +788,124 @@ class SimpleMosaic extends Mosaic_1.Mosaic {
         }
         function updateBoundary(point) {
             self_.boundary.delete(point);
-            let newBoundary = neighborsOf(point.getX(), point.getY()).filter((value) => {
-                return self_.getColorAt(value.getX(), value.getY()).equals(Pixel_1.Color.blank);
-            });
-            self_.boundary.addAll(newBoundary);
+            let neighbors = self_.grid.getNeighborsOf(point.getX(), point.getY());
+            for (let neighbor of neighbors) {
+                if (!self_.grid.isSet(neighbor.getX(), neighbor.getY())) {
+                    self_.boundary.add(neighbor);
+                }
+            }
         }
         let bestPoint = findBestPoint();
         if (!bestPoint)
             return false;
         updateBoundary(bestPoint);
-        this.grid[bestPoint.getY()][bestPoint.getX()] = color;
+        this.grid.setColorAt(bestPoint.getX(), bestPoint.getY(), color);
         this.setChanged();
         return true;
     }
     getColorAt(x, y) {
-        return this.grid[y][x];
+        return this.grid.getColorAt(x, y);
+    }
+    isSet(x, y) {
+        return this.grid.isSet(x, y);
     }
     isOnBoundary(x, y) {
         return this.boundary.has(new Pixel_1.Point(x, y));
     }
     allPoints() {
-        return this.allpts;
+        return this.grid.getAllPoints();
     }
 }
 exports.SimpleMosaic = SimpleMosaic;
+
+
+/***/ }),
+
+/***/ "./src/core/SimpleSquareMosaic.ts":
+/*!****************************************!*\
+  !*** ./src/core/SimpleSquareMosaic.ts ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const SimpleMosaic_1 = __webpack_require__(/*! ./SimpleMosaic */ "./src/core/SimpleMosaic.ts");
+const SquareGrid_1 = __webpack_require__(/*! ./SquareGrid */ "./src/core/SquareGrid.ts");
+const Pixel_1 = __webpack_require__(/*! ./Pixel */ "./src/core/Pixel.ts");
+class SimpleSquareMosaic extends SimpleMosaic_1.SimpleMosaic {
+    constructor(width, height) {
+        let grid = new SquareGrid_1.SquareGrid(width, height);
+        super(grid, [new Pixel_1.Point(Math.floor(width / 2), Math.floor(height / 2))]);
+    }
+}
+exports.SimpleSquareMosaic = SimpleSquareMosaic;
+
+
+/***/ }),
+
+/***/ "./src/core/SquareGrid.ts":
+/*!********************************!*\
+  !*** ./src/core/SquareGrid.ts ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const Pixel_1 = __webpack_require__(/*! ./Pixel */ "./src/core/Pixel.ts");
+class SquareGrid {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.grid = new Array();
+        this.allpts = new Array();
+        for (let i = 0; i < height; i++) {
+            this.grid[i] = new Array();
+            for (let j = 0; j < width; j++) {
+                this.grid[i][j] = Pixel_1.Color.blank;
+                this.allpts.push(new Pixel_1.Point(j, i));
+            }
+        }
+    }
+    setColorAt(x, y, color) {
+        this.grid[y][x] = color;
+    }
+    getColorAt(x, y) {
+        return this.grid[y][x];
+    }
+    isSet(x, y) {
+        return !this.grid[y][x].equals(Pixel_1.Color.blank);
+    }
+    getNeighborsOf(x, y) {
+        let neighbors = new Array();
+        neighbors.push(new Pixel_1.Point(x - 1, y - 1));
+        neighbors.push(new Pixel_1.Point(x - 1, y));
+        neighbors.push(new Pixel_1.Point(x - 1, y + 1));
+        neighbors.push(new Pixel_1.Point(x, y - 1));
+        neighbors.push(new Pixel_1.Point(x, y + 1));
+        neighbors.push(new Pixel_1.Point(x + 1, y - 1));
+        neighbors.push(new Pixel_1.Point(x + 1, y));
+        neighbors.push(new Pixel_1.Point(x + 1, y + 1));
+        let self_ = this;
+        return neighbors.filter((point) => {
+            return 0 <= point.getX() && point.getX() < self_.width
+                && 0 <= point.getY() && point.getY() < self_.height;
+        });
+    }
+    getAllPoints() {
+        return this.allpts;
+    }
+    getWidth() {
+        return this.width;
+    }
+    getHeight() {
+        return this.height;
+    }
+}
+exports.SquareGrid = SquareGrid;
 
 
 /***/ }),
@@ -770,9 +950,10 @@ class VoronoiHelper extends THREE.Object3D {
         // instanced attributes
         for (var i = 0; i < instances; i++) {
             // offsets
-            let x = pixels[i].getPosition().getX();
-            let y = pixels[i].getPosition().getY();
-            offsets_.push(x + offsets[y][x].x, 0, y + offsets[y][x].y);
+            let position = pixels[i].getPosition();
+            let x = position.getX();
+            let y = position.getY();
+            offsets_.push(x + offsets.get(position).x, 0, y + offsets.get(position).y);
             // colors
             colors.push(pixels[i].getColor().getR() / 255.0, pixels[i].getColor().getG() / 255.0, pixels[i].getColor().getB() / 255.0, 1.0);
         }
