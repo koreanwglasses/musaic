@@ -624,16 +624,29 @@ const ReactDOM = __webpack_require__(/*! react-dom */ "react-dom");
 const PixelMosaic_1 = __webpack_require__(/*! ./components/PixelMosaic */ "./src/components/PixelMosaic.tsx");
 const SimpleMosaic_1 = __webpack_require__(/*! ./core/SimpleMosaic */ "./src/core/SimpleMosaic.ts");
 const Pixel_1 = __webpack_require__(/*! ./core/Pixel */ "./src/core/Pixel.ts");
-let mosaic = new SimpleMosaic_1.SimpleMosaic(50, 50);
+let mosaic = new SimpleMosaic_1.SimpleMosaic(100, 100);
 let view = React.createElement(PixelMosaic_1.PixelMosaic, { mosaic: mosaic, scale: 5 });
 ReactDOM.render(view, document.getElementById('root'));
+function addRandomTiles(n) {
+    if (n == 1) {
+        let r = Math.floor(Math.random() * 255);
+        let g = Math.floor(Math.random() * 255);
+        let b = Math.floor(Math.random() * 255);
+        let a = Math.random();
+        let color = new Pixel_1.Color(r, g, b, a);
+        return mosaic.addTile(color);
+    }
+    else {
+        for (let i = 0; i < n; i++) {
+            if (!addRandomTiles(1)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
 function animate() {
-    let r = Math.floor(Math.random() * 255);
-    let g = Math.floor(Math.random() * 255);
-    let b = Math.floor(Math.random() * 255);
-    let a = Math.random();
-    let color = new Pixel_1.Color(r, g, b, a);
-    if (mosaic.addTile(color)) {
+    if (addRandomTiles(10)) {
         mosaic.notifyObservers();
         requestAnimationFrame(animate);
     }
