@@ -113,7 +113,7 @@ class PixelMosaic extends React.Component {
     }
     updateCanvas() {
         const ctx = this.refs.canvas.getContext('2d');
-        ctx.clearRect(0, 0, this.mosaic.getWidth(), this.mosaic.getHeight());
+        // ctx.clearRect(0,0, this.mosaic.getWidth() * this.scale, this.mosaic.getHeight() * this.scale);
         for (let i = 0; i < this.mosaic.getHeight(); i++) {
             for (let j = 0; j < this.mosaic.getWidth(); j++) {
                 ctx.fillStyle = this.mosaic.getColorAt(j, i).getRgba();
@@ -540,7 +540,11 @@ class SimpleMosaic extends Mosaic_1.Mosaic {
             }
         }
         this.boundary = new HashSet_1.HashSet();
-        this.boundary.add(new Pixel_1.Point(Math.floor(width / 2), Math.floor(height / 2)));
+        // this.boundary.add(new Point(Math.floor(width/2), Math.floor(height/2)));
+        this.boundary.add(new Pixel_1.Point(0, 0));
+        this.boundary.add(new Pixel_1.Point(0, height - 1));
+        this.boundary.add(new Pixel_1.Point(width - 1, 0));
+        this.boundary.add(new Pixel_1.Point(width - 1, height - 1));
     }
     addTile(color) {
         let self_ = this;

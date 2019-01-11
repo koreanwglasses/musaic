@@ -18,7 +18,12 @@ export class SimpleMosaic extends Mosaic {
         }
         
         this.boundary = new HashSet<Point>();
+
         this.boundary.add(new Point(Math.floor(width/2), Math.floor(height/2)));
+        // this.boundary.add(new Point(0, 0));
+        // this.boundary.add(new Point(0, height - 1));
+        // this.boundary.add(new Point(width - 1, 0));
+        // this.boundary.add(new Point(width - 1, height - 1));
     }
     
     public addTile(color: Color): boolean {

@@ -1,5 +1,6 @@
 import { Color } from './Pixel';
 import { Observable } from './Observable';
+
 export abstract class Mosaic extends Observable {
     private width: number;
     private height: number;
