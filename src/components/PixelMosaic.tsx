@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as THREE from 'three';
 import { Mosaic } from '../core/Mosaic';
 import { Observer } from '../core/Observable';
 

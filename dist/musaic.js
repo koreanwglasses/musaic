@@ -87,10 +87,10 @@ var Musaic =
 /************************************************************************/
 /******/ ({
 
-/***/ "./src/components/PixelMosaic.tsx":
-/*!****************************************!*\
-  !*** ./src/components/PixelMosaic.tsx ***!
-  \****************************************/
+/***/ "./src/components/VoronoiMosaic.tsx":
+/*!******************************************!*\
+  !*** ./src/components/VoronoiMosaic.tsx ***!
+  \******************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -98,7 +98,11 @@ var Musaic =
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(/*! react */ "react");
-class PixelMosaic extends React.Component {
+const THREE = __webpack_require__(/*! three */ "three");
+const Pixel_1 = __webpack_require__(/*! ../core/Pixel */ "./src/core/Pixel.ts");
+const VoronoiHelper_1 = __webpack_require__(/*! ../three/VoronoiHelper */ "./src/three/VoronoiHelper.ts");
+const three_1 = __webpack_require__(/*! three */ "three");
+class VoronoiMosaic extends React.Component {
     constructor(props) {
         super(props);
         this.mosaic = this.props.mosaic;
@@ -109,26 +113,54 @@ class PixelMosaic extends React.Component {
         this.mosaic.addObserver(this);
     }
     componentDidMount() {
+        this.init();
         this.updateCanvas();
     }
-    updateCanvas() {
-        const ctx = this.refs.canvas.getContext('2d');
-        // ctx.clearRect(0,0, this.mosaic.getWidth() * this.scale, this.mosaic.getHeight() * this.scale);
+    init() {
+        const container = this.refs.container;
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setSize(this.mosaic.getWidth() * this.scale, this.mosaic.getHeight() * this.scale);
+        container.appendChild(this.renderer.domElement);
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.OrthographicCamera(0, this.mosaic.getWidth(), 0, -this.mosaic.getHeight(), 0, 1000);
+        this.camera.position.y = 10;
+        this.camera.lookAt(0, 0, 0);
+        this.offsets = new Array();
         for (let i = 0; i < this.mosaic.getHeight(); i++) {
-            for (let j = 0; j < this.mosaic.getWidth(); j++) {
-                ctx.fillStyle = this.mosaic.getColorAt(j, i).getRgba();
-                ctx.fillRect(i * this.scale, j * this.scale, this.scale, this.scale);
-            }
+            this.offsets[i] = new Array();
         }
     }
+    updateCanvas() {
+        while (this.scene.children.length > 0) {
+            this.scene.remove(this.scene.children[0]);
+        }
+        let pixels = new Array();
+        for (let i = 0; i < this.mosaic.getHeight(); i++) {
+            for (let j = 0; j < this.mosaic.getWidth(); j++) {
+                let color = this.mosaic.getColorAt(j, i);
+                if (!color.equals(new Pixel_1.Color())) {
+                    let pixel = new Pixel_1.Pixel(new Pixel_1.Point(j, i), color);
+                    pixels.push(pixel);
+                    if (!this.offsets[i][j]) {
+                        let ox = 0.8 * (Math.random() - 0.5);
+                        let oy = 0.8 * (Math.random() - 0.5);
+                        this.offsets[i][j] = new three_1.Vector2(ox, oy);
+                    }
+                }
+            }
+        }
+        let mesh = new VoronoiHelper_1.VoronoiHelper(pixels, this.offsets);
+        this.scene.add(mesh);
+        this.renderer.render(this.scene, this.camera);
+    }
     render() {
-        return (React.createElement("canvas", { ref: "canvas", width: this.mosaic.getWidth() * this.scale, height: this.mosaic.getHeight() * this.scale }));
+        return React.createElement("div", { ref: "container" });
     }
     update() {
         this.updateCanvas();
     }
 }
-exports.PixelMosaic = PixelMosaic;
+exports.VoronoiMosaic = VoronoiMosaic;
 
 
 /***/ }),
@@ -512,6 +544,19 @@ class Point {
     }
 }
 exports.Point = Point;
+class Pixel {
+    constructor(position, color) {
+        this.position = position;
+        this.color = color;
+    }
+    getPosition() {
+        return this.position;
+    }
+    getColor() {
+        return this.color;
+    }
+}
+exports.Pixel = Pixel;
 
 
 /***/ }),
@@ -540,11 +585,11 @@ class SimpleMosaic extends Mosaic_1.Mosaic {
             }
         }
         this.boundary = new HashSet_1.HashSet();
-        // this.boundary.add(new Point(Math.floor(width/2), Math.floor(height/2)));
-        this.boundary.add(new Pixel_1.Point(0, 0));
-        this.boundary.add(new Pixel_1.Point(0, height - 1));
-        this.boundary.add(new Pixel_1.Point(width - 1, 0));
-        this.boundary.add(new Pixel_1.Point(width - 1, height - 1));
+        this.boundary.add(new Pixel_1.Point(Math.floor(width / 2), Math.floor(height / 2)));
+        // this.boundary.add(new Point(0, 0));
+        // this.boundary.add(new Point(0, height - 1));
+        // this.boundary.add(new Point(width - 1, 0));
+        // this.boundary.add(new Point(width - 1, height - 1));
     }
     addTile(color) {
         let self_ = this;
@@ -625,11 +670,11 @@ exports.SimpleMosaic = SimpleMosaic;
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(/*! react */ "react");
 const ReactDOM = __webpack_require__(/*! react-dom */ "react-dom");
-const PixelMosaic_1 = __webpack_require__(/*! ./components/PixelMosaic */ "./src/components/PixelMosaic.tsx");
+const VoronoiMosaic_1 = __webpack_require__(/*! ./components/VoronoiMosaic */ "./src/components/VoronoiMosaic.tsx");
 const SimpleMosaic_1 = __webpack_require__(/*! ./core/SimpleMosaic */ "./src/core/SimpleMosaic.ts");
 const Pixel_1 = __webpack_require__(/*! ./core/Pixel */ "./src/core/Pixel.ts");
 let mosaic = new SimpleMosaic_1.SimpleMosaic(100, 100);
-let view = React.createElement(PixelMosaic_1.PixelMosaic, { mosaic: mosaic, scale: 5 });
+let view = React.createElement(VoronoiMosaic_1.VoronoiMosaic, { mosaic: mosaic, scale: 5 });
 ReactDOM.render(view, document.getElementById('root'));
 function addRandomTiles(n) {
     if (n == 1) {
@@ -660,6 +705,84 @@ animate();
 
 /***/ }),
 
+/***/ "./src/three/VoronoiHelper.ts":
+/*!************************************!*\
+  !*** ./src/three/VoronoiHelper.ts ***!
+  \************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const THREE = __webpack_require__(/*! three */ "three");
+class VoronoiHelper extends THREE.Object3D {
+    constructor(pixels, offsets, radius, segments) {
+        super();
+        var instances = pixels.length;
+        var radius_ = radius || 1;
+        var segments_ = segments || 16;
+        var offsets_ = [];
+        var colors = [];
+        // instanced attributes
+        for (var i = 0; i < instances; i++) {
+            // offsets
+            let x = pixels[i].getPosition().getX();
+            let y = pixels[i].getPosition().getY();
+            offsets_.push(x + offsets[y][x].x, 0, y + offsets[y][x].y);
+            // colors
+            colors.push(pixels[i].getColor().getR() / 255.0, pixels[i].getColor().getG() / 255.0, pixels[i].getColor().getB() / 255.0, 1.0);
+        }
+        var coneGeometry = new THREE.ConeBufferGeometry(radius_, radius_ * 2, segments_);
+        var geometry = new THREE.InstancedBufferGeometry();
+        geometry.index = coneGeometry.index;
+        geometry.attributes = coneGeometry.attributes;
+        geometry.maxInstancedCount = instances;
+        geometry.addAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets_), 3));
+        geometry.addAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 4));
+        var material = new THREE.RawShaderMaterial({
+            vertexShader: VoronoiHelper.vertexShader,
+            fragmentShader: VoronoiHelper.fragmentShader,
+        });
+        var mesh = new THREE.Mesh(geometry, material);
+        this.add(mesh);
+    }
+}
+VoronoiHelper.vertexShader = `
+    precision highp float;
+    
+    uniform float sineTime;
+    
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+    
+    attribute vec3 position;
+    attribute vec3 offset;
+    attribute vec4 color;
+    
+    varying vec3 vPosition;
+    varying vec4 vColor;
+    
+    void main(){
+        vPosition = offset + position;
+        vColor = color;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( vPosition, 1.0 );
+    } 
+    `;
+VoronoiHelper.fragmentShader = `
+    precision highp float;
+    
+    varying vec4 vColor;
+    
+    void main() {
+        gl_FragColor = vColor;
+    }
+    `;
+exports.VoronoiHelper = VoronoiHelper;
+
+
+/***/ }),
+
 /***/ "react":
 /*!************************!*\
   !*** external "React" ***!
@@ -679,6 +802,17 @@ module.exports = React;
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
+
+/***/ }),
+
+/***/ "three":
+/*!************************!*\
+  !*** external "THREE" ***!
+  \************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = THREE;
 
 /***/ })
 

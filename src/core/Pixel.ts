@@ -94,3 +94,21 @@ export class Point implements Hashable{
         return this.x + ',' + this.y;
     }
 }
+
+export class Pixel {
+    private position: Point;
+    private color: Color;
+
+    public constructor(position: Point, color: Color) {
+        this.position = position;
+        this.color = color;
+    }
+
+    public getPosition(): Point {
+        return this.position;
+    }
+
+    public getColor(): Color {
+        return this.color;
+    }
+}

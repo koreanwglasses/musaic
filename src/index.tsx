@@ -1,11 +1,12 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { PixelMosaic } from './components/PixelMosaic';
+import { VoronoiMosaic } from './components/VoronoiMosaic';
 import { SimpleMosaic } from './core/SimpleMosaic';
 import { Color } from './core/Pixel';
 
 let mosaic = new SimpleMosaic(100, 100);
-let view = <PixelMosaic mosaic={mosaic} scale={5} />;
+let view = <VoronoiMosaic mosaic={mosaic} scale={5} />;
 
 ReactDOM.render(view, document.getElementById('root'));
 
