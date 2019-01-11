@@ -24,6 +24,7 @@ export abstract class Mosaic extends Observable {
      */
     abstract addTile(tile: Color): boolean;
     abstract getColorAt(x: number, y: number): Color;
+    abstract isOnBoundary(x: number, y: number): boolean;
 
     /**
      * @returns The width in pixels

@@ -15,8 +15,7 @@ function addRandomTiles(n: number): boolean {
         let r = Math.floor(Math.random() * 255);
         let g = Math.floor(Math.random() * 255);
         let b = Math.floor(Math.random() * 255);
-        let a = Math.random();
-        let color = new Color(r, g, b, a);
+        let color = new Color(r, g, b);
 
         return mosaic.addTile(color);
     } else {

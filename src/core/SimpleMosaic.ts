@@ -13,7 +13,7 @@ export class SimpleMosaic extends Mosaic {
         for(let i = 0; i < height; i++) {
             this.grid[i] = new Array<Color>();
             for(let j = 0; j < width; j++) {
-                this.grid[i][j] = new Color();
+                this.grid[i][j] = Color.blank;
             }
         }
         
@@ -51,7 +51,7 @@ export class SimpleMosaic extends Mosaic {
         
         function similarity(x: number, y: number): number {
             let distances = neighborsOf(x, y).filter((value) => {
-                return !self_.getColorAt(value.getX(), value.getY()).equals(new Color());
+                return !self_.getColorAt(value.getX(), value.getY()).equals(Color.blank);
             }).map((value) => {
                 return colorDistance(color, self_.getColorAt(value.getX(), value.getY()));
             });
@@ -75,7 +75,7 @@ export class SimpleMosaic extends Mosaic {
         function updateBoundary(point: Point) {
             self_.boundary.delete(point);
             let newBoundary = neighborsOf(point.getX(), point.getY()).filter((value) => {
-                return self_.getColorAt(value.getX(), value.getY()).equals(new Color());
+                return self_.getColorAt(value.getX(), value.getY()).equals(Color.blank);
             });
             self_.boundary.addAll(newBoundary);
         }
@@ -90,5 +90,9 @@ export class SimpleMosaic extends Mosaic {
     
     public getColorAt(x: number, y: number): Color {
         return this.grid[y][x];
+    }
+
+    public isOnBoundary(x: number, y: number): boolean {
+        return this.boundary.has(new Point(x, y));
     }
 }

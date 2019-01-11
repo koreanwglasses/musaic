@@ -59,8 +59,14 @@ export class VoronoiMosaic extends React.Component<any, any> implements Observer
         
         for(let i = 0; i < this.mosaic.getHeight(); i++) {
             for(let j = 0; j < this.mosaic.getWidth(); j++) {
-                let color = this.mosaic.getColorAt(j, i);
-                if(!color.equals(new Color())) {
+                let color;
+                if(this.mosaic.isOnBoundary(j, i)) {
+                    color = new Color(0, 0, 0, 1);
+                } else {
+                    color = this.mosaic.getColorAt(j, i);
+                }
+
+                if(!color.equals(Color.blank)) {
                     let pixel = new Pixel(new Point(j, i), color);
                     pixels.push(pixel);
                     
@@ -73,7 +79,7 @@ export class VoronoiMosaic extends React.Component<any, any> implements Observer
             }
         } 
         
-        let mesh = new VoronoiHelper(pixels, this.offsets);
+        let mesh = new VoronoiHelper(pixels, this.offsets, 2);
         this.scene.add( mesh );
         
         this.renderer.render(this.scene, this.camera);

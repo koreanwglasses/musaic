@@ -17,10 +17,10 @@ export class Color implements Hashable {
      * @param {number?} a A float in the range [0, 1] 
      */
     public constructor(r?: number, g?: number, b?: number, a?: number) {
-        this.r = r || 0;
-        this.g = g || 0;
-        this.b = b || 0;
-        this.a = a || 1;
+        this.r = r !== undefined ? r : 0;
+        this.g = g !== undefined ? g : 0;
+        this.b = b !== undefined ? b : 0;
+        this.a = a !== undefined ? a : 1;
     }
 
     public getR(): number {
@@ -56,6 +56,8 @@ export class Color implements Hashable {
     public hashString(): string {
         return this.r + ',' + this.g + ',' + this.b + ',' + this.a;
     }
+
+    public static readonly blank = new Color(0,0,0,0);
 }
 
 /**
