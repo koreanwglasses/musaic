@@ -182,11 +182,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(/*! react */ "react");
 const ReactDOM = __webpack_require__(/*! react-dom */ "react-dom");
 const VoronoiView_1 = __webpack_require__(/*! ../components/VoronoiView */ "./src/components/VoronoiView.tsx");
-const SimpleTriMosaic_1 = __webpack_require__(/*! ../core/SimpleTriMosaic */ "./src/core/SimpleTriMosaic.ts");
+const SimpleSquareMosaic_1 = __webpack_require__(/*! ../core/SimpleSquareMosaic */ "./src/core/SimpleSquareMosaic.ts");
 const Pixel_1 = __webpack_require__(/*! ../core/Pixel */ "./src/core/Pixel.ts");
 class SimpleAnimationController {
     constructor(mosaic, view) {
-        this.mosaic = mosaic !== undefined ? mosaic : new SimpleTriMosaic_1.SimpleTriMosaic(100, 100);
+        this.mosaic = mosaic !== undefined ? mosaic : new SimpleSquareMosaic_1.SimpleSquareMosaic(100, 100);
         this.view = view !== undefined ? view : React.createElement(VoronoiView_1.VoronoiView, { mosaic: this.mosaic, scale: 5 });
     }
     init() {
@@ -821,10 +821,10 @@ exports.SimpleMosaic = SimpleMosaic;
 
 /***/ }),
 
-/***/ "./src/core/SimpleTriMosaic.ts":
-/*!*************************************!*\
-  !*** ./src/core/SimpleTriMosaic.ts ***!
-  \*************************************/
+/***/ "./src/core/SimpleSquareMosaic.ts":
+/*!****************************************!*\
+  !*** ./src/core/SimpleSquareMosaic.ts ***!
+  \****************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -832,22 +832,23 @@ exports.SimpleMosaic = SimpleMosaic;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const SimpleMosaic_1 = __webpack_require__(/*! ./SimpleMosaic */ "./src/core/SimpleMosaic.ts");
-const TriGrid_1 = __webpack_require__(/*! ./TriGrid */ "./src/core/TriGrid.ts");
-class SimpleTriMosaic extends SimpleMosaic_1.SimpleMosaic {
+const SquareGrid_1 = __webpack_require__(/*! ./SquareGrid */ "./src/core/SquareGrid.ts");
+const Pixel_1 = __webpack_require__(/*! ./Pixel */ "./src/core/Pixel.ts");
+class SimpleSquareMosaic extends SimpleMosaic_1.SimpleMosaic {
     constructor(width, height) {
-        let grid = new TriGrid_1.TriGrid(width, height);
-        super(grid, [grid.getCenter()]);
+        let grid = new SquareGrid_1.SquareGrid(width, height);
+        super(grid, [new Pixel_1.Point(Math.floor(width / 2), Math.floor(height / 2))]);
     }
 }
-exports.SimpleTriMosaic = SimpleTriMosaic;
+exports.SimpleSquareMosaic = SimpleSquareMosaic;
 
 
 /***/ }),
 
-/***/ "./src/core/TriGrid.ts":
-/*!*****************************!*\
-  !*** ./src/core/TriGrid.ts ***!
-  \*****************************/
+/***/ "./src/core/SquareGrid.ts":
+/*!********************************!*\
+  !*** ./src/core/SquareGrid.ts ***!
+  \********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -855,40 +856,39 @@ exports.SimpleTriMosaic = SimpleTriMosaic;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const Pixel_1 = __webpack_require__(/*! ./Pixel */ "./src/core/Pixel.ts");
-const HashMap_1 = __webpack_require__(/*! ./HashMap */ "./src/core/HashMap.ts");
-class TriGrid {
+class SquareGrid {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.pixels = new HashMap_1.HashMap();
-        this.allPoints = new Array();
-        for (let i = 0; i < height / TriGrid.h; i++) {
+        this.grid = new Array();
+        this.allpts = new Array();
+        for (let i = 0; i < height; i++) {
+            this.grid[i] = new Array();
             for (let j = 0; j < width; j++) {
-                let x = i % 2 ? j + 0.5 : j;
-                let y = i * TriGrid.h;
-                let point = new Pixel_1.Point(x, y);
-                this.pixels.set(point, Pixel_1.Color.blank);
-                this.allPoints.push(point);
+                this.grid[i][j] = Pixel_1.Color.blank;
+                this.allpts.push(new Pixel_1.Point(j, i));
             }
         }
     }
     setColorAt(x, y, color) {
-        this.pixels.set(new Pixel_1.Point(x, y), color);
+        this.grid[y][x] = color;
     }
     getColorAt(x, y) {
-        return this.pixels.get(new Pixel_1.Point(x, y));
+        return this.grid[y][x];
     }
     isSet(x, y) {
-        return !this.pixels.get(new Pixel_1.Point(x, y)).equals(Pixel_1.Color.blank);
+        return !this.grid[y][x].equals(Pixel_1.Color.blank);
     }
     getNeighborsOf(x, y) {
         let neighbors = new Array();
+        neighbors.push(new Pixel_1.Point(x - 1, y - 1));
         neighbors.push(new Pixel_1.Point(x - 1, y));
-        neighbors.push(new Pixel_1.Point(x - 0.5, y + TriGrid.h));
-        neighbors.push(new Pixel_1.Point(x + 0.5, y + TriGrid.h));
+        neighbors.push(new Pixel_1.Point(x - 1, y + 1));
+        neighbors.push(new Pixel_1.Point(x, y - 1));
+        neighbors.push(new Pixel_1.Point(x, y + 1));
+        neighbors.push(new Pixel_1.Point(x + 1, y - 1));
         neighbors.push(new Pixel_1.Point(x + 1, y));
-        neighbors.push(new Pixel_1.Point(x + 0.5, y - TriGrid.h));
-        neighbors.push(new Pixel_1.Point(x - 0.5, y - TriGrid.h));
+        neighbors.push(new Pixel_1.Point(x + 1, y + 1));
         let self_ = this;
         return neighbors.filter((point) => {
             return 0 <= point.getX() && point.getX() < self_.width
@@ -896,7 +896,7 @@ class TriGrid {
         });
     }
     getAllPoints() {
-        return this.allPoints;
+        return this.allpts;
     }
     getWidth() {
         return this.width;
@@ -904,12 +904,8 @@ class TriGrid {
     getHeight() {
         return this.height;
     }
-    getCenter() {
-        return this.allPoints[Math.floor(this.allPoints.length / 2 + this.width / 2)];
-    }
 }
-TriGrid.h = Math.sqrt(3) / 2;
-exports.TriGrid = TriGrid;
+exports.SquareGrid = SquareGrid;
 
 
 /***/ }),
