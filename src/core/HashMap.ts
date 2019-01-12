@@ -131,14 +131,14 @@ export class HashMap<K extends Hashable, V> implements Iterable<[K, V]> {
     * @returns The Map object.
     */
     public set(key: K, value: V): HashMap<K, V> {
-        if(!this.has(key)) {
-            let hashString = key.hashString();
-            let bucket = this.map.get(hashString);
-            if(!bucket) {
-                this.map.set(hashString, [[key, value]]);
-            } else {
-                bucket.push([key, value]);
-            }
+        if(this.has(key)) this.delete(key);
+
+        let hashString = key.hashString();
+        let bucket = this.map.get(hashString);
+        if(!bucket) {
+            this.map.set(hashString, [[key, value]]);
+        } else {
+            bucket.push([key, value]);
         }
         return this;
     }
