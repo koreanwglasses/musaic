@@ -4,6 +4,7 @@ import * as ReactDOM from 'react-dom';
 import { PixelView } from '../components/PixelView';
 import { VoronoiView } from '../components/VoronoiView';
 import { SimpleSquareMosaic } from '../core/SimpleSquareMosaic';
+import { SimpleTriMosaic } from '../core/SimpleTriMosaic';
 import { Color } from '../core/Pixel';
 import { Mosaic } from '../core/Mosaic';
 
