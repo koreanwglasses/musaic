@@ -89,11 +89,11 @@ export class Point implements Hashable{
         if(!(obj instanceof Point)) {
             return false;
         }
-        return this.x == obj.x && this.y == obj.y;
+        return Math.abs(this.x - obj.x) < 0.00001 && Math.abs(this.y - obj.y) < 0.00001;
     }
 
     public hashString(): string {
-        return this.x + ',' + this.y;
+        return this.x.toPrecision(10) + ',' + this.y.toPrecision(10);
     }
 }
 
