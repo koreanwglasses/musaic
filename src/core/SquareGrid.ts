@@ -46,6 +46,18 @@ export class SquareGrid implements Grid {
         neighbors.push(new Point(x + 1, y));
         neighbors.push(new Point(x + 1, y + 1));
 
+        function shuffle(arr: Array<Point>): void {
+            for(let i = 0; i < arr.length; i++) {
+                let j = Math.floor(Math.random() * (arr.length - i)) + i;
+
+                let tmp = arr[j];
+                arr[j] = arr[i];
+                arr[i] = tmp;
+            }
+        }
+
+        shuffle(neighbors);
+
         let self_ = this;
         return neighbors.filter((point) => {
             return 0 <= point.getX() && point.getX() < self_.width 

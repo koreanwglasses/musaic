@@ -889,6 +889,15 @@ class SquareGrid {
         neighbors.push(new Pixel_1.Point(x + 1, y - 1));
         neighbors.push(new Pixel_1.Point(x + 1, y));
         neighbors.push(new Pixel_1.Point(x + 1, y + 1));
+        function shuffle(arr) {
+            for (let i = 0; i < arr.length; i++) {
+                let j = Math.floor(Math.random() * (arr.length - i)) + i;
+                let tmp = arr[j];
+                arr[j] = arr[i];
+                arr[i] = tmp;
+            }
+        }
+        shuffle(neighbors);
         let self_ = this;
         return neighbors.filter((point) => {
             return 0 <= point.getX() && point.getX() < self_.width
